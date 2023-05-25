@@ -1,28 +1,40 @@
-name: Build
+name: Minimal Android CI Workflow
 
 on:
   push:
     branches:
-      - main  # Adjust this branch name if needed
+      - master
+    tags:
+      - 'v*'
 
 jobs:
-  build:
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup JDK
+        uses: actions/setup-java@v1
         with:
-          java-version: '11'  # Adjust the Java version if needed
-
-      - name: Build with Gradle
-        run: ./gradlew assembleDebug
-
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+          java-version: 1.8
+      - name: Run Tests
+        run: bash ./gradlew test --stacktrace  
+  apk:
+    name: Generate APK
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup JDK
+        uses: actions/setup-java@v1
         with:
-          name: Debug artifacts
-          path: app/build/outputs/apk/debug/*.apk
+          java-version: 1.8
+      - name: Build APK
+        run: bash ./gradlew assembleDebug --stacktrace
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: app/build/outputs/apk/debug/app-debug.apk 
